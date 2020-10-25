@@ -762,3 +762,14 @@ class AssetLastAccessedTest(AssetsTestCase):
         assert a.last_accessed != a_from_db.last_accessed # last_accessed should change
         assert a.last_accessed < a_from_db.last_accessed # last_accessed should be a later timestamp
         a.delete()
+
+    def test_update_asset_without_orm(self):
+        a = self.create_an_asset_with_orm()
+        with connection.cursor() as cursor:
+            cursor.execute('UPDATE kpi_asset SET date_created = now() WHERE id = %s', [a.id])
+            cursor.execute('SELECT * FROM kpi_asset WHERE id = %s', [a.id])
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+        a_from_db = dict(zip(columns, row))
+        assert a.last_accessed == a_from_db['last_accessed']
+        a.delete()
