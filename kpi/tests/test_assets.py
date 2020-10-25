@@ -7,6 +7,7 @@ from copy import deepcopy
 import xlrd
 from django.contrib.auth.models import User, AnonymousUser
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.test import TestCase
 
 from kpi.constants import PERM_VIEW_ASSET, PERM_CHANGE_ASSET, PERM_SHARE_ASSET, \
@@ -723,3 +724,34 @@ class ShareAssetsTest(AssetsTestCase):
         for user_obj in AnonymousUser(), self.anotheruser:
             self.assertTrue(user_obj.has_perm(
                 PERM_VIEW_ASSET, self.asset))
+
+class AssetLastAccessedTest(AssetsTestCase):
+
+    def create_an_asset_with_orm(self):
+        a = Asset(
+            content={'survey': [
+                {'type': 'text',
+                'label': 'Question 1',
+                'name': 'q1',
+                '$kuid': 'abc'},
+                {'type': 'text',
+                'label': 'Question 2',
+                'name': 'q2',
+                '$kuid': 'def'},
+            ]}, owner=self.user, asset_type='survey'
+        )
+        a.save()
+        return a
+
+    def create_an_asset_without_orm(self):
+        pass
+
+    def test_access_asset_without_orm(self):
+        a = self.create_an_asset_with_orm()
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT * FROM kpi_asset WHERE id = %s', [a.id])
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+        a_from_db = dict(zip(columns, row))
+        assert a.last_accessed == a_from_db['last_accessed']
+        a.delete()
