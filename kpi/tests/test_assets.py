@@ -1,4 +1,5 @@
 # coding: utf-8
+import datetime
 import json
 import re
 from collections import OrderedDict
@@ -772,4 +773,18 @@ class AssetLastAccessedTest(AssetsTestCase):
             row = cursor.fetchone()
         a_from_db = dict(zip(columns, row))
         assert a.last_accessed == a_from_db['last_accessed']
+        a.delete()
+
+    def test_update_asset_with_orm(self):
+        a = self.create_an_asset_with_orm()
+        # a_from_db = deepcopy(a) # if we were to do this, we would be skipping the ORM's constructor for Asset and thus this should fail
+        a_from_db = Asset.objects.get(id=a.id) # on the other hand, this replicates what is tested in test_access_asset_with_orm,
+                                               # which probably makes this test redundent
+        a_from_db.date_created = datetime.datetime.now()
+        a_from_db.save()
+        ###### Verify that a_from_db has not modified a
+        assert a.date_created != a_from_db.date_created
+        ######
+        assert a.last_accessed != a_from_db.last_accessed # last_accessed should change
+        assert a.last_accessed < a_from_db.last_accessed # last_accessed should be a later timestamp
         a.delete()
