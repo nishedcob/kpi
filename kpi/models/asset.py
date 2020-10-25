@@ -498,6 +498,8 @@ class Asset(ObjectPermissionMixin,
 
     permissions = GenericRelation(ObjectPermission)
 
+    last_accessed = models.DateTimeField(blank=True, null=True, default=None)
+
     objects = AssetManager()
 
     @property
