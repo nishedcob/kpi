@@ -745,7 +745,26 @@ class AssetLastAccessedTest(AssetsTestCase):
         return a
 
     def create_an_asset_without_orm(self):
-        pass
+        insert = '''
+        INSERT INTO kpi_asset
+        (
+            "name", date_created, date_modified, content, asset_type, editors_can_change_permissions,
+            uid, owner_id, parent_id, summary, "_deployment_data", report_styles, settings, report_custom,
+            map_custom, map_styles, last_accessed
+        )
+        VALUES(
+            '', now(), now(), '{}', %s, true,
+            'aaaa', null, null, '{}', '{}', '{}', '{}', '{}',
+            '{}', '{}', null
+        );
+        '''
+        values = ['survey']
+        with connection.cursor() as cursor:
+            cursor.execute(insert, values)
+            cursor.execute('SELECT * FROM kpi_asset WHERE id = (SELECT MAX(id) FROM kpi_asset)') # TODO: Selecting the max id from kpi_asset is probably not the best way to figure out what we just inserted and may be prone to breaking at some later date
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+        return dict(zip(columns, row))
 
     def test_access_asset_without_orm(self):
         a = self.create_an_asset_with_orm()
@@ -788,3 +807,9 @@ class AssetLastAccessedTest(AssetsTestCase):
         assert a.last_accessed != a_from_db.last_accessed # last_accessed should change
         assert a.last_accessed < a_from_db.last_accessed # last_accessed should be a later timestamp
         a.delete()
+
+    def test_create_asset_without_orm(self):
+        a = self.create_an_asset_without_orm()
+        assert a['last_accessed'] is None
+        a_from_db = Asset.objects.get(id=a['id'])
+        a_from_db.delete()
