@@ -755,3 +755,10 @@ class AssetLastAccessedTest(AssetsTestCase):
         a_from_db = dict(zip(columns, row))
         assert a.last_accessed == a_from_db['last_accessed']
         a.delete()
+
+    def test_access_asset_with_orm(self):
+        a = self.create_an_asset_with_orm()
+        a_from_db = Asset.objects.get(id=a.id)
+        assert a.last_accessed != a_from_db.last_accessed # last_accessed should change
+        assert a.last_accessed < a_from_db.last_accessed # last_accessed should be a later timestamp
+        a.delete()
