@@ -813,3 +813,8 @@ class AssetLastAccessedTest(AssetsTestCase):
         assert a['last_accessed'] is None
         a_from_db = Asset.objects.get(id=a['id'])
         a_from_db.delete()
+
+    def test_create_asset_with_orm(self):
+        a = self.create_an_asset_with_orm()
+        assert a.last_accessed is not None
+        a.delete()
