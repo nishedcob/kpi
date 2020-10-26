@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save, post_delete, post_init
 from django.dispatch import receiver
+from django.utils import timezone
 from django_digest.models import PartialDigest
 from rest_framework.authtoken.models import Token
 from taggit.models import Tag
@@ -112,4 +113,4 @@ def post_delete_asset(sender, instance, **kwargs):
 @receiver(post_init, sender=Asset)
 def asset_update_last_accessed(sender, instance, **kwargs):
     if sender == Asset:
-        instance.last_accessed = datetime.datetime.utcnow()
+        instance.last_accessed = datetime.datetime.now(tz=timezone.utc)
