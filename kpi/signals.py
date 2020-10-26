@@ -16,7 +16,7 @@ from kpi.deployment_backends.kc_access.shadow_models import (
     KobocatDigestPartial
 )
 from kpi.deployment_backends.kc_access.utils import grant_kc_model_level_perms
-from kpi.models import Asset, Collection, ObjectPermission, TagUid
+from kpi.models import Asset, AssetVersion, Collection, ObjectPermission, TagUid
 from kpi.utils.permissions import grant_default_model_level_perms
 
 
@@ -111,6 +111,7 @@ def post_delete_asset(sender, instance, **kwargs):
     # No recalculation is necessary since children will also be deleted
 
 @receiver(post_init, sender=Asset)
+@receiver(post_init, sender=AssetVersion)
 def asset_update_last_accessed(sender, instance, **kwargs):
     if sender == Asset:
         instance.last_accessed = datetime.datetime.now(tz=timezone.utc)
@@ -121,3 +122,11 @@ def asset_update_last_accessed(sender, instance, **kwargs):
         #! What is missing here is something along the lines of:
         # if instance.pk is not None:
         #     instance.save(update_fields=['last_accessed'])
+    #? TODO: Currently failing tests, something to be investigated
+    # elif sender == AssetVersion:
+    #     instance.asset.last_accessed = datetime.datetime.now(tz=timezone.utc)
+    #     #! TODO: See the above comment about why code along these lines is both:
+    #     #!  (a) necessary in the future and
+    #     #!  (b) currently not implemented
+    #     # if instance.pk is not None:
+    #     #     instance.asset.save(update_fields=['last_accessed'])
