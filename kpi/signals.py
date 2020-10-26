@@ -1,7 +1,8 @@
 # coding: utf-8
+import datetime
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, post_init
 from django.dispatch import receiver
 from django_digest.models import PartialDigest
 from rest_framework.authtoken.models import Token
@@ -107,3 +108,8 @@ def post_delete_asset(sender, instance, **kwargs):
     # Remove all permissions associated with this object
     ObjectPermission.objects.filter_for_object(instance).delete()
     # No recalculation is necessary since children will also be deleted
+
+@receiver(post_init, sender=Asset)
+def asset_update_last_accessed(sender, instance, **kwargs):
+    if sender == Asset:
+        instance.last_accessed = datetime.datetime.utcnow()
