@@ -114,3 +114,10 @@ def post_delete_asset(sender, instance, **kwargs):
 def asset_update_last_accessed(sender, instance, **kwargs):
     if sender == Asset:
         instance.last_accessed = datetime.datetime.now(tz=timezone.utc)
+        #! TODO: When the signal saves Asset back to the database, almost all the tests fail or result in an error...
+        #! this is something that should be investigated, because if it is not fixed, a silent bug may occur in which
+        #! last_accessed is never persisted back into the database if the returned Asset itself is never persisted
+        #! (this is a case which is not covered by tests)
+        #! What is missing here is something along the lines of:
+        # if instance.pk is not None:
+        #     instance.save(update_fields=['last_accessed'])
