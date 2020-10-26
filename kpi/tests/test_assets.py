@@ -14,6 +14,7 @@ from django.test import TestCase
 from kpi.constants import PERM_VIEW_ASSET, PERM_CHANGE_ASSET, PERM_SHARE_ASSET, \
     PERM_VIEW_COLLECTION, PERM_CHANGE_COLLECTION
 from kpi.models import Asset
+from kpi.models import AssetVersion
 from kpi.models import Collection
 from kpi.models.object_permission import get_all_objects_for_user
 
@@ -817,4 +818,24 @@ class AssetLastAccessedTest(AssetsTestCase):
     def test_create_asset_with_orm(self):
         a = self.create_an_asset_with_orm()
         assert a.last_accessed is not None
+        a.delete()
+
+    def create_an_assetversion_with_orm(self, a):
+        av = AssetVersion(
+            asset=a, version_content=dict()
+        )
+        av.save()
+        return av
+
+    def test_access_assetversion_without_orm(self):
+        a = self.create_an_asset_with_orm()
+        av = self.create_an_assetversion_with_orm(a)
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT * FROM kpi_assetversion WHERE id = %s', [av.id])
+            cursor.execute('SELECT * FROM kpi_asset WHERE id = %s', [a.id])
+            columns = [col[0] for col in cursor.description]
+            row = cursor.fetchone()
+        a_from_db = dict(zip(columns, row))
+        assert a.last_accessed == a_from_db['last_accessed']
+        av.delete()
         a.delete()
