@@ -773,13 +773,6 @@ class AssetLastAccessedTest(AssetsTestCase):
             columns = [col[0] for col in cursor.description]
             row = cursor.fetchone()
         a_from_db = dict(zip(columns, row))
-        # TODO:
-        # - a doesn't have a timezone
-        # - a_from_db does
-        # Why? We shouldn't need the following <hack>
-        a.last_accessed = a.last_accessed.replace(tzinfo = None)
-        a_from_db['last_accessed'] = a_from_db['last_accessed'].replace(tzinfo = None)
-        # </hack>
         assert a.last_accessed == a_from_db['last_accessed']
         a.delete()
 
@@ -798,13 +791,6 @@ class AssetLastAccessedTest(AssetsTestCase):
             columns = [col[0] for col in cursor.description]
             row = cursor.fetchone()
         a_from_db = dict(zip(columns, row))
-        # TODO:
-        # - a doesn't have a timezone
-        # - a_from_db does
-        # Why? We shouldn't need the following <hack>
-        a.last_accessed = a.last_accessed.replace(tzinfo = None)
-        a_from_db['last_accessed'] = a_from_db['last_accessed'].replace(tzinfo = None)
-        # </hack>
         assert a.last_accessed == a_from_db['last_accessed']
         a.delete()
 
